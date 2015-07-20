@@ -20,14 +20,13 @@
 
 #include "sdcardfs.h"
 #include "linux/ctype.h"
-#include <linux/lockdep.h>
 
 /*
  * returns: -ERRNO if error (returned to user)
  *          0: tell VFS to invalidate dentry
  *          1: dentry is valid
  */
-static int sdcardfs_d_revalidate(struct dentry *dentry, unsigned int flags)
+static int sdcardfs_d_revalidate(struct dentry *dentry, struct nameidata *nd)
 {
 	int err = 1;
 	struct path parent_lower_path, lower_path;
@@ -36,7 +35,7 @@ static int sdcardfs_d_revalidate(struct dentry *dentry, unsigned int flags)
 	struct dentry *lower_cur_parent_dentry = NULL;
 	struct dentry *lower_dentry = NULL;
 
-	if (flags & LOOKUP_RCU)
+	if (nd && nd->flags & LOOKUP_RCU)
 		return -ECHILD;
 
 	spin_lock(&dentry->d_lock);
@@ -75,8 +74,6 @@ static int sdcardfs_d_revalidate(struct dentry *dentry, unsigned int flags)
 		goto out;
 	}
 
-	lockdep_off();
-
 	if (dentry < lower_dentry) {
 		spin_lock(&dentry->d_lock);
 		spin_lock(&lower_dentry->d_lock);
@@ -102,8 +99,6 @@ static int sdcardfs_d_revalidate(struct dentry *dentry, unsigned int flags)
 		spin_unlock(&lower_dentry->d_lock);
 	}
 
-	lockdep_on();
-
 out:
 	dput(parent_dentry);
 	dput(lower_cur_parent_dentry);
@@ -124,7 +119,7 @@ static void sdcardfs_d_release(struct dentry *dentry)
 }
 
 static int sdcardfs_hash_ci(const struct dentry *dentry,
-				struct qstr *qstr)
+				const struct inode *inode, struct qstr *qstr)
 {
 	/*
 	 * This function is copy of vfat_hashi.
@@ -153,7 +148,8 @@ static int sdcardfs_hash_ci(const struct dentry *dentry,
  * Case insensitive compare of two vfat names.
  */
 static int sdcardfs_cmp_ci(const struct dentry *parent,
-		const struct dentry *dentry,
+		const struct inode *pinode,
+		const struct dentry *dentry, const struct inode *inode,
 		unsigned int len, const char *str, const struct qstr *name)
 {
 	/* This function is copy of vfat_cmpi */
@@ -177,15 +173,10 @@ static int sdcardfs_cmp_ci(const struct dentry *parent,
 	return 1;
 }
 
-static void sdcardfs_canonical_path(const struct path *path, struct path *actual_path) {
-	sdcardfs_get_real_lower(path->dentry, actual_path);
-}
-
 const struct dentry_operations sdcardfs_ci_dops = {
 	.d_revalidate	= sdcardfs_d_revalidate,
 	.d_release	= sdcardfs_d_release,
 	.d_hash 	= sdcardfs_hash_ci,
 	.d_compare	= sdcardfs_cmp_ci,
-	.d_canonical_path = sdcardfs_canonical_path,
 };
 
