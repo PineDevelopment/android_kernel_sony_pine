@@ -34,11 +34,11 @@
  * SYNC_DEBUG
  *
  * [MTK] {{{
- * #define SYNC_DEBUG
+ *#define SYNC_DEBUG
  * [MTK] }}}
  */
 
-/* Defined by MTK for Fence timeout debug, and will not dump at normal time. */
+/*Defined by MTK for Fence timeout debug, and will not dump at normal time.*/
 #define SYNC_DEBUG
 
 static LIST_HEAD(sync_timeline_list_head);
