@@ -593,6 +593,8 @@ CONFIG_CHARGER_QNS=y
 CONFIG_MTK_AEE_MRDUMP=y
 CONFIG_POWERKEY_FORCECRASH=y
 
+CONFIG_SDCARD_FS=y
+
 #enable zram lz4 by alreoryuan
 CONFIG_ZRAM_LZ4_COMPRESS=y
 #// <<< 2017/02/21-youchihwang. Battery. DMS09517171. The battery level display abnormally after restart the MUT.
