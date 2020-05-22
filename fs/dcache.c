@@ -1574,8 +1574,6 @@ void d_set_d_op(struct dentry *dentry, const struct dentry_operations *op)
 		dentry->d_flags |= DCACHE_OP_DELETE;
 	if (op->d_prune)
 		dentry->d_flags |= DCACHE_OP_PRUNE;
-	if (op->d_select_inode)
-		dentry->d_flags |= DCACHE_OP_SELECT_INODE;
 
 }
 EXPORT_SYMBOL(d_set_d_op);
