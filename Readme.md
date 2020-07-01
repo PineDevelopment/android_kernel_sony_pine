@@ -11,7 +11,7 @@ BUILD INSTRUCTIONS?
 Specific sources are separated by releases with it's corresponding number. First, you should
 clone the project:
 
-        $ git clone -b 43.0.A.7.106-STOCK https://github.com/PineDevelopment/kernel_sony_pine.git kernel
+        $ git clone -b v3.18.35 https://github.com/PineDevelopment/kernel_sony_pine.git kernel
 
 At the same level of the "kernel" directory:
 
