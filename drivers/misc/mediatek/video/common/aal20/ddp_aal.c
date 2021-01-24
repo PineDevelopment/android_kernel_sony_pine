@@ -77,7 +77,13 @@ static DECLARE_WAIT_QUEUE_HEAD(g_aal_hist_wq);
 static DEFINE_SPINLOCK(g_aal_hist_lock);
 static DISP_AAL_HIST g_aal_hist = {
 	.serviceFlags = 0,
-	.backlight = -1
+	.backlight = -1,
+#ifdef AAL_SUPPORT_KERNEL_API
+	.essStrengthIndex = ESS_LEVEL_BY_CUSTOM_LIB,
+	.ess_enable = ESS_EN_BY_CUSTOM_LIB,
+	.dre_enable = DRE_EN_BY_CUSTOM_LIB
+#endif
+
 };
 static DISP_AAL_HIST g_aal_hist_db;
 static ddp_module_notify g_ddp_notify;
@@ -160,8 +166,8 @@ static int disp_aal_get_latency_lowerbound(void)
 
 	bwc_scen = smi_get_current_profile();
 	if (bwc_scen == SMI_BWC_SCEN_VR || bwc_scen == SMI_BWC_SCEN_SWDEC_VP ||
-		bwc_scen == SMI_BWC_SCEN_SWDEC_VP || bwc_scen == SMI_BWC_SCEN_VP ||
-		bwc_scen == SMI_BWC_SCEN_VR_SLOW)
+		bwc_scen == SMI_BWC_SCEN_VP || bwc_scen == SMI_BWC_SCEN_VR_SLOW ||
+		bwc_scen == SMI_BWC_SCEN_VP_HIGH_FPS || bwc_scen == SMI_BWC_SCEN_VP_HIGH_RESOLUTION
 
 		aalrefresh = AAL_REFRESH_33MS;
 	else

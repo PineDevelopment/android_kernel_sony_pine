@@ -149,6 +149,11 @@ typedef enum {
 	DISP_SESSION_DECOUPLE_MIRROR_MODE = 4,
 
 	DISP_SESSION_RDMA_MODE,
+	DISP_SESSION_DUAL_DIRECT_LINK_MODE,
+	DISP_SESSION_DUAL_DECOUPLE_MODE,
+	DISP_SESSION_DUAL_RDMA_MODE,
+	/* three session at same time */
+	DISP_SESSION_TRIPLE_DIRECT_LINK_MODE,
 	DISP_SESSION_MODE_NUM,
 
 } DISP_MODE;
@@ -264,11 +269,18 @@ typedef struct disp_output_config_t {
 	unsigned int frm_sequence;
 } disp_output_config;
 
+struct disp_ccorr_config {
+	bool is_dirty;
+	int mode;
+	int color_matrix[16];
+};
+
 typedef struct disp_session_input_config_t {
 	DISP_SESSION_USER setter;
 	unsigned int session_id;
 	unsigned int config_layer_num;
 	disp_input_config config[12];
+	struct disp_ccorr_config ccorr_config;
 } disp_session_input_config;
 
 typedef struct disp_session_output_config_t {
@@ -305,6 +317,13 @@ struct disp_frame_cfg_t {
 	void *prev_present_fence_struct;
 	EXTD_TRIGGER_MODE tigger_mode;
 	DISP_SESSION_USER user;
+
+
+	/* ccorr config */
+	struct disp_ccorr_config ccorr_config;
+
+	/* res_idx: SF/HWC selects which resolution to use */
+	int res_idx;
 };
 
 typedef struct disp_session_info_t {
@@ -321,6 +340,7 @@ typedef struct disp_session_info_t {
 	unsigned int physicalHeight;	/* length: mm, for legacy use */
 	unsigned int physicalWidthUm;	/* length: um, for more precise precision */
 	unsigned int physicalHeightUm;	/* length: um, for more precise precision */
+	unsigned int density;
 	unsigned int isConnected;
 	unsigned int isHDCPSupported;
 	unsigned int isOVLDisabled;
@@ -380,6 +400,8 @@ typedef enum {
 	DISP_FEATURE_HRT = 0x00000002,
 	DISP_FEATURE_PARTIAL = 0x00000004,
 	DISP_FEATURE_FENCE_WAIT = 0x00000008,
+	DISP_FEATURE_DISP_SELF_REFRESH = 0x00000040,
+	DISP_FEATURE_RPO = 0x00000080,
 } DISP_FEATURE;
 
 typedef struct disp_caps_t {
@@ -399,6 +421,13 @@ typedef struct disp_session_buf_t {
 	unsigned int buf_hnd[3];
 } disp_session_buf_info;
 
+enum LAYERING_CAPS {
+	LAYERING_OVL_ONLY =	0x00000001,
+	MDP_RSZ_LAYER =		0x00000002,
+	DISP_RSZ_LAYER =	0x00000004,
+	MDP_ROT_LAYER =		0x00000008,
+};
+
 typedef struct layer_config_t {
 	unsigned int ovl_id;
 	DISP_FORMAT src_fmt;
@@ -414,15 +443,34 @@ typedef struct disp_layer_info_t {
 	int gles_head[2];
 	int gles_tail[2];
 	int hrt_num;
+	/* res_idx: SF/HWC selects which resolution to use */
+	int res_idx;
 } disp_layer_info;
 
 enum DISP_SCENARIO {
 	DISP_SCENARIO_NORMAL,
 	DISP_SCENARIO_SELF_REFRESH,
+	DISP_SCENARIO_FORCE_DC,
+	DISP_SCENARIO_NUM,
 };
 struct disp_scenario_config_t {
 	unsigned int session_id;
 	unsigned int scenario;
+};
+
+enum DISP_UT_ERROR {
+	DISP_UT_ERROR_OVL = 0x00000001,
+	DISP_UT_ERROR_WDMA = 0x00000002,
+	DISP_UT_ERROR_RDMA = 0x00000004,
+	DISP_UT_ERROR_CMDQ_TIMEOUT = 0x00000008,
+};
+
+enum DISP_SELF_REFRESH_TYPE {
+	WAIT_FOR_REFRESH,
+	REFRESH_FOR_ANTI_LATENCY2,
+	REFRESH_FOR_SWITCH_DECOUPLE,
+	REFRESH_FOR_SWITCH_DECOUPLE_MIRROR,
+	REFRESH_TYPE_NUM,
 };
 
 /* IOCTL commands. */
@@ -460,6 +508,8 @@ struct disp_scenario_config_t {
 #define	DISP_IOCTL_SET_SCENARIO				DISP_IOW(222, struct disp_scenario_config_t)
 #define	DISP_IOCTL_WAIT_ALL_JOBS_DONE			DISP_IOW(220, unsigned int)
 #define	DISP_IOCTL_SCREEN_FREEZE			DISP_IOW(223, unsigned int)
+#define DISP_IOCTL_GET_UT_RESULT			DISP_IOW(226, unsigned int)
+#define DISP_IOCTL_WAIT_DISP_SELF_REFRESH		DISP_IOW(227, unsigned int)
 
 #ifdef __KERNEL__
 
